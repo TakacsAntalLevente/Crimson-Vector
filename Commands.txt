@@ -1,0 +1,7 @@
+
+Mysys UCRT64 ben compile.
+
+Compile + exe fajl:
+gcc src/main.c glad/src/glad.c -Iglad/include -lglfw3 -lopengl32 -lgdi32 -o game.exe
+
+glad 1.x-et kell hasznalni
