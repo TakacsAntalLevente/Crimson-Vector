@@ -18,6 +18,52 @@ const char* fragmentShaderSource =
 "   FragColor = vec4(1.0, 0.5, 0.2, 1.0);\n"
 "}\0";
 
+float cameraX = 0.0f;
+float cameraY = 0.0f;
+float cameraZ = 3.0f;
+
+float yaw = -90.0f;
+float pitch = 0.0f;
+
+float frontX = 0.0f;
+float frontY = 0.0f;
+float frontZ = -1.0f;
+
+float speed = 0.05f;
+
+float lastX = 400, lastY = 300;
+int firstMouse = 1;
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if(firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = 0;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;
+
+    lastX = xpos;
+    lastY = ypos;
+
+    float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    if(pitch > 89.0f) pitch = 89.0f;
+    if(pitch < -89.0f) pitch = -89.0f;
+
+    frontX = cos(yaw * 3.14159/180.0) * cos(pitch * 3.14159/180.0);
+    frontY = sin(pitch * 3.14159/180.0);
+    frontZ = sin(yaw * 3.14159/180.0) * cos(pitch * 3.14159/180.0);
+}
+
 int main()
 {
     glfwInit();
@@ -32,6 +78,7 @@ int main()
         glfwTerminate();
         return -1;
     }
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glfwMakeContextCurrent(window);
 
