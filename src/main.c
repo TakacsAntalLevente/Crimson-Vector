@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <math.h>
 
 const char* vertexShaderSource =
 "#version 330 core\n"
@@ -79,6 +80,7 @@ int main()
         return -1;
     }
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
 
     glfwMakeContextCurrent(window);
 
@@ -87,6 +89,7 @@ int main()
         printf("Failed to initialize GLAD\n");
         return -1;
     }
+    glEnable(GL_DEPTH_TEST);
 
     glViewport(0, 0, 800, 600);
 
@@ -109,9 +112,47 @@ int main()
 
 
     float vertices[] = {
-         0.0f,  0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f
+    -0.5f,-0.5f,-0.5f,
+     0.5f,-0.5f,-0.5f,
+     0.5f, 0.5f,-0.5f,
+     0.5f, 0.5f,-0.5f,
+    -0.5f, 0.5f,-0.5f,
+    -0.5f,-0.5f,-0.5f,
+
+    -0.5f,-0.5f, 0.5f,
+     0.5f,-0.5f, 0.5f,
+     0.5f, 0.5f, 0.5f,
+     0.5f, 0.5f, 0.5f,
+    -0.5f, 0.5f, 0.5f,
+    -0.5f,-0.5f, 0.5f,
+
+    -0.5f, 0.5f, 0.5f,
+    -0.5f, 0.5f,-0.5f,
+    -0.5f,-0.5f,-0.5f,
+    -0.5f,-0.5f,-0.5f,
+    -0.5f,-0.5f, 0.5f,
+    -0.5f, 0.5f, 0.5f,
+
+     0.5f, 0.5f, 0.5f,
+     0.5f, 0.5f,-0.5f,
+     0.5f,-0.5f,-0.5f,
+     0.5f,-0.5f,-0.5f,
+     0.5f,-0.5f, 0.5f,
+     0.5f, 0.5f, 0.5f,
+
+    -0.5f,-0.5f,-0.5f,
+     0.5f,-0.5f,-0.5f,
+     0.5f,-0.5f, 0.5f,
+     0.5f,-0.5f, 0.5f,
+    -0.5f,-0.5f, 0.5f,
+    -0.5f,-0.5f,-0.5f,
+
+    -0.5f, 0.5f,-0.5f,
+     0.5f, 0.5f,-0.5f,
+     0.5f, 0.5f, 0.5f,
+     0.5f, 0.5f, 0.5f,
+    -0.5f, 0.5f, 0.5f,
+    -0.5f, 0.5f,-0.5f
     };
 
     unsigned int VBO, VAO;
@@ -130,13 +171,27 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
        //Ui text will be here
 
+       if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        {
+            cameraX += frontX * speed;
+            cameraY += frontY * speed;
+            cameraZ += frontZ * speed;
+        }
+
+        if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        {
+            cameraX -= frontX * speed;
+            cameraY -= frontY * speed;
+            cameraZ -= frontZ * speed;
+        }
+
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES,0,36);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
