@@ -1,0 +1,99 @@
+#include "player.h"
+#include <math.h>
+
+static Vector3 NormalizeSafe(Vector3 v)
+{
+    float len = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    if (len <= 0.0001f) return (Vector3){0.0f, 0.0f, 0.0f};
+    return (Vector3){v.x / len, v.y / len, v.z / len};
+}
+
+BoundingBox Player_GetBoundingBoxAt(const Player *player, Vector3 position)
+{
+    BoundingBox box;
+    box.min = (Vector3){
+        position.x - player->radius,
+        position.y,
+        position.z - player->radius
+    };
+    box.max = (Vector3){
+        position.x + player->radius,
+        position.y + player->height,
+        position.z + player->radius
+    };
+    return box;
+}
+
+void Player_Init(Player *player, Vector3 spawnPosition)
+{
+    player->position = spawnPosition;
+    player->radius = 0.35f;
+    player->height = 1.8f;
+    player->moveSpeed = 5.0f;
+    player->sprintMultiplier = 1.6f;
+    player->jumpSpeed = 6.0f;
+    player->gravity = -18.0f;
+    player->verticalVelocity = 0.0f;
+    player->onGround = 1;
+}
+
+void Player_Update(Player *player, const CameraController *camera, const World *world, float dt)
+{
+    Vector3 moveDir = {0.0f, 0.0f, 0.0f};
+    Vector3 forward = CameraController_GetForwardFlat(camera);
+    Vector3 right = CameraController_GetRightFlat(camera);
+
+    if (IsKeyDown(KEY_W)) {
+        moveDir.x += forward.x;
+        moveDir.z += forward.z;
+    }
+    if (IsKeyDown(KEY_S)) {
+        moveDir.x -= forward.x;
+        moveDir.z -= forward.z;
+    }
+    if (IsKeyDown(KEY_D)) {
+        moveDir.x += right.x;
+        moveDir.z += right.z;
+    }
+    if (IsKeyDown(KEY_A)) {
+        moveDir.x -= right.x;
+        moveDir.z -= right.z;
+    }
+
+    moveDir = NormalizeSafe(moveDir);
+
+    float currentSpeed = player->moveSpeed;
+    if (IsKeyDown(KEY_LEFT_SHIFT)) {
+        currentSpeed *= player->sprintMultiplier;
+    }
+
+    Vector3 desiredPosition = player->position;
+    desiredPosition.x += moveDir.x * currentSpeed * dt;
+
+    BoundingBox boxX = Player_GetBoundingBoxAt(player, desiredPosition);
+    if (!World_CheckCollision(world, boxX)) {
+        player->position.x = desiredPosition.x;
+    }
+
+    desiredPosition = player->position;
+    desiredPosition.z += moveDir.z * currentSpeed * dt;
+
+    BoundingBox boxZ = Player_GetBoundingBoxAt(player, desiredPosition);
+    if (!World_CheckCollision(world, boxZ)) {
+        player->position.z = desiredPosition.z;
+    }
+
+    if (player->onGround && IsKeyPressed(KEY_SPACE)) {
+        player->verticalVelocity = player->jumpSpeed;
+        player->onGround = 0;
+    }
+
+    player->verticalVelocity += player->gravity * dt;
+    player->position.y += player->verticalVelocity * dt;
+
+    if (player->position.y <= 0.0f) {
+        player->position.y = 0.0f;
+        player->verticalVelocity = 0.0f;
+        player->onGround = 1;
+    }
+}
