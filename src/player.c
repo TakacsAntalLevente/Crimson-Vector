@@ -52,12 +52,12 @@ void Player_Update(Player *player, const CameraController *camera, const World *
         moveDir.z -= forward.z;
     }
     if (IsKeyDown(KEY_D)) {
-        moveDir.x += right.x;
-        moveDir.z += right.z;
-    }
-    if (IsKeyDown(KEY_A)) {
         moveDir.x -= right.x;
         moveDir.z -= right.z;
+    }
+    if (IsKeyDown(KEY_A)) {
+        moveDir.x += right.x;
+        moveDir.z += right.z;
     }
 
     moveDir = NormalizeSafe(moveDir);

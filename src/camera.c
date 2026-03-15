@@ -84,7 +84,7 @@ void CameraController_Update(CameraController *controller, Vector3 playerPositio
 {
     Vector2 mouseDelta = GetMouseDelta();
 
-    controller->yaw += mouseDelta.x * controller->sensitivity;
+    controller->yaw -= mouseDelta.x * controller->sensitivity;
     controller->pitch -= mouseDelta.y * controller->sensitivity;
 
     controller->pitch = ClampFloat(controller->pitch, -1.5f, 1.5f);
