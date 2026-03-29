@@ -1,25 +1,25 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include "raylib.h"
+#include "math3d.h"
 
 #define MAX_WORLD_BOXES 64
 
 typedef struct WorldBox {
-    Vector3 position;
-    Vector3 size;
-    Color color;
-    BoundingBox bounds;
+    Vec3 position;
+    Vec3 size;
+    Vec3 color;
+    AABB bounds;
 } WorldBox;
 
 typedef struct World {
     WorldBox boxes[MAX_WORLD_BOXES];
     int boxCount;
-    Vector3 spawnPoint;
+    Vec3 spawnPoint;
     float arenaHalfSize;
 } World;
 
-void World_Init(World *world);
-int World_CheckCollision(const World *world, BoundingBox playerBox);
+void world_init(World *world);
+int world_check_collision(const World *world, AABB playerBox);
 
 #endif

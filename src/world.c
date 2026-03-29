@@ -1,53 +1,47 @@
 #include "world.h"
 
-static void World_AddBox(World *world, Vector3 position, Vector3 size, Color color)
-{
+static void world_add_box(World *world, Vec3 position, Vec3 size, Vec3 color) {
     if (world->boxCount >= MAX_WORLD_BOXES) return;
 
     WorldBox *box = &world->boxes[world->boxCount++];
-
     box->position = position;
     box->size = size;
     box->color = color;
 
-    box->bounds.min = (Vector3){
+    box->bounds.min = vec3(
         position.x - size.x * 0.5f,
         position.y - size.y * 0.5f,
         position.z - size.z * 0.5f
-    };
-
-    box->bounds.max = (Vector3){
+    );
+    box->bounds.max = vec3(
         position.x + size.x * 0.5f,
         position.y + size.y * 0.5f,
         position.z + size.z * 0.5f
-    };
+    );
 }
 
-void World_Init(World *world)
-{
+void world_init(World *world) {
     world->boxCount = 0;
-    world->arenaHalfSize = 50.0f;
-    world->spawnPoint = (Vector3){0.0f, 0.0f, 0.0f};
+    world->arenaHalfSize = 12.0f;
+    world->spawnPoint = vec3(0.0f, 0.0f, 0.0f);
 
     float s = world->arenaHalfSize;
 
-    World_AddBox(world, (Vector3){ 0.0f, 1.5f,  s/3}, (Vector3){100.0f, 3.0f, 1.0f}, GRAY);
-    World_AddBox(world, (Vector3){ 0.0f, 1.5f, -s/3}, (Vector3){100.0f, 3.0f, 1.0f}, GRAY);
-    World_AddBox(world, (Vector3){ s/3, 1.5f,  0.0f}, (Vector3){1.0f, 3.0f, 100.0f}, GRAY);
-    World_AddBox(world, (Vector3){-s/3, 1.5f,  0.0f}, (Vector3){1.0f, 3.0f, 100.0f}, GRAY);
+    world_add_box(world, vec3(0.0f, 1.5f,  s), vec3(24.0f, 3.0f, 1.0f), vec3(0.55f, 0.55f, 0.55f));
+    world_add_box(world, vec3(0.0f, 1.5f, -s), vec3(24.0f, 3.0f, 1.0f), vec3(0.55f, 0.55f, 0.55f));
+    world_add_box(world, vec3( s, 1.5f, 0.0f), vec3(1.0f, 3.0f, 24.0f), vec3(0.55f, 0.55f, 0.55f));
+    world_add_box(world, vec3(-s, 1.5f, 0.0f), vec3(1.0f, 3.0f, 24.0f), vec3(0.55f, 0.55f, 0.55f));
 
-    World_AddBox(world, (Vector3){ 3.0f, 1.0f,  4.0f}, (Vector3){2.0f, 2.0f, 2.0f}, BROWN);
-    World_AddBox(world, (Vector3){ 6.0f, 0.5f,  4.0f}, (Vector3){2.0f, 1.0f, 2.0f}, YELLOW);
-    World_AddBox(world, (Vector3){-4.0f, 1.0f,  2.0f}, (Vector3){2.5f, 2.0f, 2.5f}, DARKBROWN);
-    World_AddBox(world, (Vector3){ 2.0f, 1.0f, -5.0f}, (Vector3){3.0f, 2.0f, 2.0f}, BLUE);
-    World_AddBox(world, (Vector3){-5.5f, 1.0f, -4.0f}, (Vector3){2.0f, 2.0f, 3.0f}, DARKGRAY);
-    World_AddBox(world, (Vector3){ 0.0f, 1.0f,  7.0f}, (Vector3){8.0f, 4.0f, 1.5f}, RED);
+    world_add_box(world, vec3( 3.0f, 1.0f,  4.0f), vec3(2.0f, 2.0f, 2.0f), vec3(0.52f, 0.32f, 0.20f));
+    world_add_box(world, vec3(-4.0f, 1.0f,  2.0f), vec3(2.5f, 2.0f, 2.5f), vec3(0.35f, 0.22f, 0.12f));
+    world_add_box(world, vec3( 2.0f, 1.0f, -5.0f), vec3(3.0f, 2.0f, 2.0f), vec3(0.45f, 0.12f, 0.12f));
+    world_add_box(world, vec3(-5.5f, 1.0f, -4.0f), vec3(2.0f, 2.0f, 3.0f), vec3(0.25f, 0.25f, 0.25f));
+    world_add_box(world, vec3( 0.0f, 1.0f,  7.0f), vec3(4.0f, 2.0f, 1.5f), vec3(0.45f, 0.45f, 0.12f));
 }
 
-int World_CheckCollision(const World *world, BoundingBox playerBox)
-{
+int world_check_collision(const World *world, AABB playerBox) {
     for (int i = 0; i < world->boxCount; ++i) {
-        if (CheckCollisionBoxes(playerBox, world->boxes[i].bounds)) {
+        if (aabb_intersects(playerBox, world->boxes[i].bounds)) {
             return 1;
         }
     }

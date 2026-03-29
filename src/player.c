@@ -1,147 +1,115 @@
 #include "player.h"
-#include <math.h>
 
-static Vector3 NormalizeSafe(Vector3 v)
+AABB player_get_aabb_at(const Player *player, Vec3 position)
 {
-    float len = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
-    if (len <= 0.0001f) return (Vector3){0.0f, 0.0f, 0.0f};
-    return (Vector3){v.x / len, v.y / len, v.z / len};
-}
-
-BoundingBox Player_GetBoundingBoxAt(const Player *player, Vector3 position)
-{
-    BoundingBox box;
-    box.min = (Vector3){
-        position.x - player->radius,
-        position.y,
-        position.z - player->radius
-    };
-    box.max = (Vector3){
-        position.x + player->radius,
-        position.y + player->height,
-        position.z + player->radius
-    };
+    AABB box;
+    box.min = vec3(position.x - player->radius, position.y, position.z - player->radius);
+    box.max = vec3(position.x + player->radius, position.y + player->height, position.z + player->radius);
     return box;
 }
 
-void Player_Init(Player *player, Vector3 spawnPosition)
+void player_init(Player *player, Vec3 spawnPosition)
 {
     player->position = spawnPosition;
     player->radius = 0.35f;
     player->height = 1.8f;
     player->moveSpeed = 5.0f;
     player->sprintMultiplier = 1.6f;
-    player->jumpSpeed = 9.0f;
+    player->jumpSpeed = 6.0f;
     player->gravity = -18.0f;
     player->verticalVelocity = 0.0f;
     player->onGround = 1;
 }
 
-void Player_Update(Player *player, const CameraController *camera, const World *world, float dt)
+void player_update(Player *player, const Camera *camera, const World *world, const Uint8 *keys, float dt)
 {
-    Vector3 moveDir = {0.0f, 0.0f, 0.0f};
-    Vector3 forward = CameraController_GetForwardFlat(camera);
-    Vector3 right = CameraController_GetRightFlat(camera);
+    const float skin = 0.01f;
 
-    if (IsKeyDown(KEY_W)) {
-        moveDir.x += forward.x;
-        moveDir.z += forward.z;
-    }
-    if (IsKeyDown(KEY_S)) {
-        moveDir.x -= forward.x;
-        moveDir.z -= forward.z;
-    }
-    if (IsKeyDown(KEY_D)) {
-        moveDir.x -= right.x;
-        moveDir.z -= right.z;
-    }
-    if (IsKeyDown(KEY_A)) {
-        moveDir.x += right.x;
-        moveDir.z += right.z;
-    }
+    Vec3 moveDir = vec3(0.0f, 0.0f, 0.0f);
+    Vec3 forward = camera_forward_flat(camera);
+    Vec3 right = camera_right_flat(camera);
 
-    moveDir = NormalizeSafe(moveDir);
+    // --- INPUT ---
+    if (keys[SDL_SCANCODE_W]) moveDir = vec3_add(moveDir, forward);
+    if (keys[SDL_SCANCODE_S]) moveDir = vec3_sub(moveDir, forward);
+    if (keys[SDL_SCANCODE_D]) moveDir = vec3_add(moveDir, right);
+    if (keys[SDL_SCANCODE_A]) moveDir = vec3_sub(moveDir, right);
 
-    float currentSpeed = player->moveSpeed;
-    if (IsKeyDown(KEY_LEFT_SHIFT)) {
-        currentSpeed *= player->sprintMultiplier;
+    moveDir = vec3_normalize(moveDir);
+
+    float speed = player->moveSpeed;
+    if (keys[SDL_SCANCODE_LSHIFT]) speed *= player->sprintMultiplier;
+
+    // --- X AXIS ---
+    Vec3 desired = player->position;
+    desired.x += moveDir.x * speed * dt;
+
+    if (!world_check_collision(world, player_get_aabb_at(player, desired))) {
+        player->position.x = desired.x;
     }
 
-    // X movement
-    Vector3 desiredPosition = player->position;
-    desiredPosition.x += moveDir.x * currentSpeed * dt;
+    // --- Z AXIS ---
+    desired = player->position;
+    desired.z += moveDir.z * speed * dt;
 
-    BoundingBox boxX = Player_GetBoundingBoxAt(player, desiredPosition);
-    if (!World_CheckCollision(world, boxX)) {
-        player->position.x = desiredPosition.x;
+    if (!world_check_collision(world, player_get_aabb_at(player, desired))) {
+        player->position.z = desired.z;
     }
 
-    // Z movement
-    desiredPosition = player->position;
-    desiredPosition.z += moveDir.z * currentSpeed * dt;
-
-    BoundingBox boxZ = Player_GetBoundingBoxAt(player, desiredPosition);
-    if (!World_CheckCollision(world, boxZ)) {
-        player->position.z = desiredPosition.z;
-    }
-
-    // Jump
-    if (player->onGround && IsKeyPressed(KEY_SPACE)) {
+    // --- JUMP ---
+    if (player->onGround && keys[SDL_SCANCODE_SPACE]) {
         player->verticalVelocity = player->jumpSpeed;
         player->onGround = 0;
     }
 
-    // Gravity
+    // --- GRAVITY ---
+    float oldY = player->position.y;
     player->verticalVelocity += player->gravity * dt;
 
-    // Y movement
-    float oldY = player->position.y;
-    desiredPosition = player->position;
-    desiredPosition.y += player->verticalVelocity * dt;
-
-    BoundingBox yBox = Player_GetBoundingBoxAt(player, desiredPosition);
+    desired = player->position;
+    desired.y += player->verticalVelocity * dt;
 
     player->onGround = 0;
 
-    // Floor collision
-    if (desiredPosition.y <= 0.0f) {
+    // --- FLOOR ---
+    if (desired.y <= 0.0f) {
         player->position.y = 0.0f;
         player->verticalVelocity = 0.0f;
         player->onGround = 1;
         return;
     }
 
-    // Box collision on Y
+    // --- Y COLLISION (BOXES) ---
+    AABB yBox = player_get_aabb_at(player, desired);
     int collidedY = 0;
+
     for (int i = 0; i < world->boxCount; ++i) {
-        const BoundingBox box = world->boxes[i].bounds;
+        AABB box = world->boxes[i].bounds;
 
-        if (CheckCollisionBoxes(yBox, box)) {
-            float oldBottom = oldY;
-            float oldTop = oldY + player->height;
-            float newBottom = desiredPosition.y;
-            float newTop = desiredPosition.y + player->height;
+        if (!aabb_intersects(yBox, box)) continue;
 
-            // Landing on top of the box while falling
-            if (player->verticalVelocity <= 0.0f && oldBottom >= box.max.y - 0.05f) {
-                player->position.y = box.max.y + 0.02f;
-                player->verticalVelocity = 0.0f;
-                player->onGround = 1;
-                collidedY = 2;
-                break;
-            }
+        float oldBottom = oldY;
+        float oldTop = oldY + player->height;
 
-            // Hitting the underside of the box while jumping
-            if (player->verticalVelocity > 0.0f && oldTop <= box.min.y + 0.05f) {
-                player->position.y = box.min.y - player->height;
-                player->verticalVelocity = 0.0f;
-                collidedY = 2;
-                break;
-            }
+        // Landing on top
+        if (player->verticalVelocity <= 0.0f && oldBottom >= box.max.y - 0.05f) {
+            player->position.y = box.max.y + skin;
+            player->verticalVelocity = 0.0f;
+            player->onGround = 1;
+            collidedY = 1;
+            break;
+        }
+
+        // Hitting underside
+        if (player->verticalVelocity > 0.0f && oldTop <= box.min.y + 0.05f) {
+            player->position.y = box.min.y - player->height - skin;
+            player->verticalVelocity = 0.0f;
+            collidedY = 1;
+            break;
         }
     }
 
     if (!collidedY) {
-        player->position.y = desiredPosition.y;
+        player->position.y = desired.y;
     }
 }
