@@ -25,11 +25,12 @@ void camera_init(Camera *camera, Vec3 playerPosition)
 
 void camera_update_mouse(Camera *camera, int mouseDx, int mouseDy)
 {
-    // Mouse movement -> rotation
-    camera->yaw += (float)mouseDx * camera->sensitivity;
+    // NORMAL X (left/right)
+    camera->yaw -= (float)mouseDx * camera->sensitivity;
+
+    // INVERTED Y (up/down)
     camera->pitch -= (float)mouseDy * camera->sensitivity;
 
-    // Clamp vertical look (prevents flipping)
     camera->pitch = clampf(camera->pitch, -1.5f, 1.5f);
 }
 
@@ -71,9 +72,9 @@ Vec3 camera_right_flat(const Camera *camera)
     Vec3 forward = camera_forward_flat(camera);
 
     Vec3 right = vec3(
-        forward.z,
+        -forward.z,
         0.0f,
-        -forward.x
+        forward.x
     );
 
     return vec3_normalize(right);

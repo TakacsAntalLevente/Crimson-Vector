@@ -15,7 +15,7 @@ void player_init(Player *player, Vec3 spawnPosition)
     player->height = 1.8f;
     player->moveSpeed = 5.0f;
     player->sprintMultiplier = 1.6f;
-    player->jumpSpeed = 6.0f;
+    player->jumpSpeed = 12.0f;
     player->gravity = -18.0f;
     player->verticalVelocity = 0.0f;
     player->onGround = 1;

@@ -11,19 +11,16 @@ int main(void) {
     const int screenWidth = 1280;
     const int screenHeight = 720;
 
-    // --- SDL INIT ---
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
         fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
         return 1;
     }
 
-    // --- OPENGL SETTINGS ---
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-    // --- WINDOW ---
     SDL_Window *window = SDL_CreateWindow(
         "SDL2 + OpenGL FPS",
         SDL_WINDOWPOS_CENTERED,
@@ -39,7 +36,6 @@ int main(void) {
         return 1;
     }
 
-    // --- OPENGL CONTEXT ---
     SDL_GLContext glContext = SDL_GL_CreateContext(window);
     if (!glContext) {
         fprintf(stderr, "SDL_GL_CreateContext failed: %s\n", SDL_GetError());
@@ -48,10 +44,9 @@ int main(void) {
         return 1;
     }
 
-    SDL_GL_SetSwapInterval(1); // vsync
-    SDL_SetRelativeMouseMode(SDL_TRUE); // lock + hide cursor
+    SDL_GL_SetSwapInterval(1);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
-    // --- RENDERER INIT ---
     if (!renderer_init(screenWidth, screenHeight)) {
         fprintf(stderr, "renderer_init failed\n");
         SDL_GL_DeleteContext(glContext);
@@ -60,7 +55,6 @@ int main(void) {
         return 1;
     }
 
-    // --- GAME INIT ---
     World world;
     world_init(&world);
 
@@ -70,16 +64,17 @@ int main(void) {
     Camera camera;
     camera_init(&camera, player.position);
 
-    // --- TIMING ---
     int running = 1;
     Uint64 prevCounter = SDL_GetPerformanceCounter();
 
-    // --- MAIN LOOP ---
+    // FPS counter data
+    Uint64 fpsTimer = SDL_GetPerformanceCounter();
+    int fpsFrames = 0;
+
     while (running) {
         int mouseDx = 0;
         int mouseDy = 0;
 
-        // --- EVENTS ---
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -96,29 +91,38 @@ int main(void) {
             }
         }
 
-        // --- DELTA TIME ---
         Uint64 currentCounter = SDL_GetPerformanceCounter();
         float dt = (float)(currentCounter - prevCounter) / (float)SDL_GetPerformanceFrequency();
         prevCounter = currentCounter;
 
-        // clamp dt (prevents physics bugs on lag spikes)
         if (dt > 0.033f) dt = 0.033f;
 
         const Uint8 *keys = SDL_GetKeyboardState(NULL);
 
-        // --- UPDATE ---
         camera_update_mouse(&camera, mouseDx, mouseDy);
         player_update(&player, &camera, &world, keys, dt);
         camera_sync_to_player(&camera, player.position);
 
-        // --- RENDER ---
         renderer_begin_frame(screenWidth, screenHeight);
         renderer_draw_world(&camera, &world, screenWidth, screenHeight);
         renderer_draw_crosshair(screenWidth, screenHeight);
         renderer_end_frame(window);
+
+        // FPS update once per second
+        fpsFrames++;
+        float fpsElapsed = (float)(currentCounter - fpsTimer) / (float)SDL_GetPerformanceFrequency();
+        if (fpsElapsed >= 1.0f) {
+            float fps = (float)fpsFrames / fpsElapsed;
+
+            char title[128];
+            snprintf(title, sizeof(title), "SDL2 + OpenGL FPS | FPS: %.0f", fps);
+            SDL_SetWindowTitle(window, title);
+
+            fpsFrames = 0;
+            fpsTimer = currentCounter;
+        }
     }
 
-    // --- CLEANUP ---
     renderer_shutdown();
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
