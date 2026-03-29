@@ -26,21 +26,22 @@ static void World_AddBox(World *world, Vector3 position, Vector3 size, Color col
 void World_Init(World *world)
 {
     world->boxCount = 0;
-    world->arenaHalfSize = 12.0f;
+    world->arenaHalfSize = 50.0f;
     world->spawnPoint = (Vector3){0.0f, 0.0f, 0.0f};
 
     float s = world->arenaHalfSize;
 
-    World_AddBox(world, (Vector3){ 0.0f, 1.5f,  s}, (Vector3){24.0f, 3.0f, 1.0f}, GRAY);
-    World_AddBox(world, (Vector3){ 0.0f, 1.5f, -s}, (Vector3){24.0f, 3.0f, 1.0f}, GRAY);
-    World_AddBox(world, (Vector3){ s, 1.5f,  0.0f}, (Vector3){1.0f, 3.0f, 24.0f}, GRAY);
-    World_AddBox(world, (Vector3){-s, 1.5f,  0.0f}, (Vector3){1.0f, 3.0f, 24.0f}, GRAY);
+    World_AddBox(world, (Vector3){ 0.0f, 1.5f,  s/3}, (Vector3){100.0f, 3.0f, 1.0f}, GRAY);
+    World_AddBox(world, (Vector3){ 0.0f, 1.5f, -s/3}, (Vector3){100.0f, 3.0f, 1.0f}, GRAY);
+    World_AddBox(world, (Vector3){ s/3, 1.5f,  0.0f}, (Vector3){1.0f, 3.0f, 100.0f}, GRAY);
+    World_AddBox(world, (Vector3){-s/3, 1.5f,  0.0f}, (Vector3){1.0f, 3.0f, 100.0f}, GRAY);
 
     World_AddBox(world, (Vector3){ 3.0f, 1.0f,  4.0f}, (Vector3){2.0f, 2.0f, 2.0f}, BROWN);
+    World_AddBox(world, (Vector3){ 6.0f, 0.5f,  4.0f}, (Vector3){2.0f, 1.0f, 2.0f}, YELLOW);
     World_AddBox(world, (Vector3){-4.0f, 1.0f,  2.0f}, (Vector3){2.5f, 2.0f, 2.5f}, DARKBROWN);
-    World_AddBox(world, (Vector3){ 2.0f, 1.0f, -5.0f}, (Vector3){3.0f, 2.0f, 2.0f}, MAROON);
+    World_AddBox(world, (Vector3){ 2.0f, 1.0f, -5.0f}, (Vector3){3.0f, 2.0f, 2.0f}, BLUE);
     World_AddBox(world, (Vector3){-5.5f, 1.0f, -4.0f}, (Vector3){2.0f, 2.0f, 3.0f}, DARKGRAY);
-    World_AddBox(world, (Vector3){ 0.0f, 1.0f,  7.0f}, (Vector3){4.0f, 2.0f, 1.5f}, RED);
+    World_AddBox(world, (Vector3){ 0.0f, 1.0f,  7.0f}, (Vector3){8.0f, 4.0f, 1.5f}, RED);
 }
 
 int World_CheckCollision(const World *world, BoundingBox playerBox)

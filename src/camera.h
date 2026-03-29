@@ -1,20 +1,23 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "raylib.h"
+#include "math3d.h"
 
-typedef struct CameraController {
-    Camera3D camera;
+typedef struct Camera {
+    Vec3 position;
     float yaw;
     float pitch;
     float sensitivity;
     float eyeHeight;
-} CameraController;
+    float fovDegrees;
+} Camera;
 
-void CameraController_Init(CameraController *controller, Vector3 playerPosition);
-void CameraController_Update(CameraController *controller, Vector3 playerPosition);
-Vector3 CameraController_GetForward(const CameraController *controller);
-Vector3 CameraController_GetForwardFlat(const CameraController *controller);
-Vector3 CameraController_GetRightFlat(const CameraController *controller);
+void camera_init(Camera *camera, Vec3 playerPosition);
+void camera_update_mouse(Camera *camera, int mouseDx, int mouseDy);
+void camera_sync_to_player(Camera *camera, Vec3 playerPosition);
+Vec3 camera_forward(const Camera *camera);
+Vec3 camera_forward_flat(const Camera *camera);
+Vec3 camera_right_flat(const Camera *camera);
+Mat4 camera_view_matrix(const Camera *camera);
 
 #endif

@@ -31,7 +31,7 @@ void Player_Init(Player *player, Vector3 spawnPosition)
     player->height = 1.8f;
     player->moveSpeed = 5.0f;
     player->sprintMultiplier = 1.6f;
-    player->jumpSpeed = 6.0f;
+    player->jumpSpeed = 9.0f;
     player->gravity = -18.0f;
     player->verticalVelocity = 0.0f;
     player->onGround = 1;
@@ -67,6 +67,7 @@ void Player_Update(Player *player, const CameraController *camera, const World *
         currentSpeed *= player->sprintMultiplier;
     }
 
+    // X movement
     Vector3 desiredPosition = player->position;
     desiredPosition.x += moveDir.x * currentSpeed * dt;
 
@@ -75,6 +76,7 @@ void Player_Update(Player *player, const CameraController *camera, const World *
         player->position.x = desiredPosition.x;
     }
 
+    // Z movement
     desiredPosition = player->position;
     desiredPosition.z += moveDir.z * currentSpeed * dt;
 
@@ -83,17 +85,63 @@ void Player_Update(Player *player, const CameraController *camera, const World *
         player->position.z = desiredPosition.z;
     }
 
+    // Jump
     if (player->onGround && IsKeyPressed(KEY_SPACE)) {
         player->verticalVelocity = player->jumpSpeed;
         player->onGround = 0;
     }
 
+    // Gravity
     player->verticalVelocity += player->gravity * dt;
-    player->position.y += player->verticalVelocity * dt;
 
-    if (player->position.y <= 0.0f) {
+    // Y movement
+    float oldY = player->position.y;
+    desiredPosition = player->position;
+    desiredPosition.y += player->verticalVelocity * dt;
+
+    BoundingBox yBox = Player_GetBoundingBoxAt(player, desiredPosition);
+
+    player->onGround = 0;
+
+    // Floor collision
+    if (desiredPosition.y <= 0.0f) {
         player->position.y = 0.0f;
         player->verticalVelocity = 0.0f;
         player->onGround = 1;
+        return;
+    }
+
+    // Box collision on Y
+    int collidedY = 0;
+    for (int i = 0; i < world->boxCount; ++i) {
+        const BoundingBox box = world->boxes[i].bounds;
+
+        if (CheckCollisionBoxes(yBox, box)) {
+            float oldBottom = oldY;
+            float oldTop = oldY + player->height;
+            float newBottom = desiredPosition.y;
+            float newTop = desiredPosition.y + player->height;
+
+            // Landing on top of the box while falling
+            if (player->verticalVelocity <= 0.0f && oldBottom >= box.max.y - 0.05f) {
+                player->position.y = box.max.y + 0.02f;
+                player->verticalVelocity = 0.0f;
+                player->onGround = 1;
+                collidedY = 2;
+                break;
+            }
+
+            // Hitting the underside of the box while jumping
+            if (player->verticalVelocity > 0.0f && oldTop <= box.min.y + 0.05f) {
+                player->position.y = box.min.y - player->height;
+                player->verticalVelocity = 0.0f;
+                collidedY = 2;
+                break;
+            }
+        }
+    }
+
+    if (!collidedY) {
+        player->position.y = desiredPosition.y;
     }
 }
