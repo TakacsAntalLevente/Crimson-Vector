@@ -55,6 +55,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+
     World world;
     world_init(&world);
 
@@ -70,6 +71,7 @@ int main(int argc, char *argv[]) {
     // FPS counter data
     Uint64 fpsTimer = SDL_GetPerformanceCounter();
     int fpsFrames = 0;
+
 
     while (running) {
         int mouseDx = 0;
@@ -113,9 +115,22 @@ int main(int argc, char *argv[]) {
         float fpsElapsed = (float)(currentCounter - fpsTimer) / (float)SDL_GetPerformanceFrequency();
         if (fpsElapsed >= 1.0f) {
             float fps = (float)fpsFrames / fpsElapsed;
-
             char title[128];
-            snprintf(title, sizeof(title), "SDL2 + OpenGL FPS | FPS: %.0f", fps);
+
+            if (!player.finished) {
+                snprintf(title, sizeof(title),
+                    "Parkour | FPS: %.0f | Time: %.2f",
+                    fps,
+                    player.runTime
+                );
+            } else {
+                snprintf(title, sizeof(title),
+                    "FINISHED! | FPS: %.0f | Time: %.2f",
+                    fps,
+                    player.runTime
+                );
+            }
+
             SDL_SetWindowTitle(window, title);
 
             fpsFrames = 0;

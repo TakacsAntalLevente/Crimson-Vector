@@ -19,6 +19,9 @@ void player_init(Player *player, Vec3 spawnPosition)
     player->gravity = -18.0f;
     player->verticalVelocity = 0.0f;
     player->onGround = 1;
+    player->runTime = 0.0f;
+    player->runActive = 0;
+    player->finished = 0;
 }
 
 void player_update(Player *player, const Camera *camera, const World *world, const Uint8 *keys, float dt)
@@ -36,6 +39,16 @@ void player_update(Player *player, const Camera *camera, const World *world, con
     if (keys[SDL_SCANCODE_A]) moveDir = vec3_sub(moveDir, right);
 
     moveDir = vec3_normalize(moveDir);
+
+    if (player->position.y < world->spawnPoint.y - 10.0f) {
+    player->position = world->spawnPoint;
+
+    player->verticalVelocity = 0.0f;
+    player->onGround = 0;
+
+    // IMPORTANT: reset Y movement properly
+    return;
+    }
 
     float speed = player->moveSpeed;
     if (keys[SDL_SCANCODE_LSHIFT]) speed *= player->sprintMultiplier;
@@ -62,6 +75,8 @@ void player_update(Player *player, const Camera *camera, const World *world, con
         player->onGround = 0;
     }
 
+    
+
     // --- GRAVITY ---
     float oldY = player->position.y;
     player->verticalVelocity += player->gravity * dt;
@@ -69,16 +84,10 @@ void player_update(Player *player, const Camera *camera, const World *world, con
     desired = player->position;
     desired.y += player->verticalVelocity * dt;
 
-    player->onGround = 0;
+    player->onGround = 1;
 
-    // --- FLOOR ---
-    if (desired.y <= 0.0f) {
-        player->position.y = 0.0f;
-        player->verticalVelocity = 0.0f;
-        player->onGround = 1;
-        return;
-    }
-
+    
+  
     // --- Y COLLISION (BOXES) ---
     AABB yBox = player_get_aabb_at(player, desired);
     int collidedY = 0;
@@ -111,5 +120,22 @@ void player_update(Player *player, const Camera *camera, const World *world, con
 
     if (!collidedY) {
         player->position.y = desired.y;
+    }
+
+    // timer start
+    if (!player->runActive) {
+        player->runActive = 1;
+    }
+
+    // update timer
+    if (player->runActive && !player->finished) {
+        player->runTime += dt;
+    }
+
+    Vec3 diff = vec3_sub(player->position, world->finishPoint);
+    float dist = vec3_length(diff);
+
+    if (dist < 2.5f && !player->finished) {
+        player->finished = 1;
     }
 }

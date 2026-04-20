@@ -15,6 +15,9 @@ typedef struct Player {
     float gravity;
     float verticalVelocity;
     int onGround;
+    float runTime;
+    int runActive;
+    int finished;
 } Player;
 
 void player_init(Player *player, Vec3 spawnPosition);

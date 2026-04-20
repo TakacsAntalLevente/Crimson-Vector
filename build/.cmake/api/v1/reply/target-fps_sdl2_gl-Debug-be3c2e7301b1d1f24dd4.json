@@ -46,18 +46,6 @@
 			}
 		]
 	},
-	"codemodelVersion" : 
-	{
-		"major" : 2,
-		"minor" : 10
-	},
-	"compileDependencies" : 
-	[
-		{
-			"backtrace" : 2,
-			"id" : "OpenGL::GL::@6890427a1f51a3e7e1df"
-		}
-	],
 	"compileGroups" : 
 	[
 		{
@@ -103,6 +91,10 @@
 				"role" : "flags"
 			},
 			{
+				"fragment" : "",
+				"role" : "flags"
+			},
+			{
 				"backtrace" : 2,
 				"fragment" : "-lmingw32",
 				"role" : "libraries"
@@ -129,25 +121,6 @@
 		],
 		"language" : "C"
 	},
-	"linkLibraries" : 
-	[
-		{
-			"backtrace" : 2,
-			"fragment" : "mingw32"
-		},
-		{
-			"backtrace" : 2,
-			"fragment" : "SDL2main"
-		},
-		{
-			"backtrace" : 2,
-			"fragment" : "SDL2"
-		},
-		{
-			"backtrace" : 2,
-			"id" : "OpenGL::GL::@6890427a1f51a3e7e1df"
-		}
-	],
 	"name" : "fps_sdl2_gl",
 	"nameOnDisk" : "fps_sdl2_gl.exe",
 	"paths" : 
