@@ -7,7 +7,7 @@
 #include "renderer.h"
 #include "world.h"
 
-int main(void) {
+int main(int argc, char *argv[]) {
     const int screenWidth = 1280;
     const int screenHeight = 720;
 

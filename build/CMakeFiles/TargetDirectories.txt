@@ -1,0 +1,3 @@
+C:/Users/L1v4y/Documents/Crimson-Vector/build/CMakeFiles/fps_sdl2_gl.dir
+C:/Users/L1v4y/Documents/Crimson-Vector/build/CMakeFiles/edit_cache.dir
+C:/Users/L1v4y/Documents/Crimson-Vector/build/CMakeFiles/rebuild_cache.dir
