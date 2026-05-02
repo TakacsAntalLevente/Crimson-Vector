@@ -17,8 +17,10 @@ typedef struct World {
     int boxCount;
     Vec3 spawnPoint;
     float arenaHalfSize;
+    Vec3 finishPoint;
 } World;
 
+int world_is_free(const World *world, AABB box);
 void world_init(World *world);
 int world_check_collision(const World *world, AABB playerBox);
 
