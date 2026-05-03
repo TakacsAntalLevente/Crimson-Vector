@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(fps_sdl2_gl C)
+project(crimsonvector C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -8,7 +8,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 
-add_executable(fps_sdl2_gl
+add_executable(crimsonvector
     src/main.c
     src/camera.c
     src/player.c
